@@ -1,8 +1,8 @@
 # taste-agent
 
-**"Your AI coding agent is blind to taste. Fix that."**
+**"Your AI coding agent doesn't execute your vision. Fix that."**
 
-`taste-agent` is an adversarial design director for AI coding agents. It evaluates every output against a human-written `taste.md` spec and an accumulated `taste.memory`, issuing `APPROVE | REVISE | REJECT` verdicts that force quality up to SOTA.
+`taste-agent` is an adversarial design director for AI coding agents. It ensures your AI coding agent actually executes *your* design vision — not its generic default output. Write `taste.md` once (your aesthetic, your copy voice, your non-negotiables), then let `taste-agent` adversarially enforce it on every single output with `APPROVE | REVISE | REJECT` verdicts.
 
 ---
 

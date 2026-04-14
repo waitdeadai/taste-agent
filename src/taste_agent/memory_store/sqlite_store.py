@@ -22,11 +22,9 @@ from __future__ import annotations
 
 import json
 import sqlite3
-import uuid
+from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Generator
 
 from taste_agent.core.memory import MemoryEntry, TasteMemory
 

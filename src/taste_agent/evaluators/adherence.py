@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import re
-
 from taste_agent.models.taste_spec import TasteSpec
 
 

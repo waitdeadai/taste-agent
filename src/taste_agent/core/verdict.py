@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class VERDICT(str, Enum):
+class VERDICT(StrEnum):
     """Taste evaluation verdict.
 
     - APPROVE: Output meets taste.md standards. No revisions needed.
@@ -25,7 +25,7 @@ class VERDICT(str, Enum):
 class Verdict:
     """Structured verdict with metadata."""
 
-    __slots__ = ("value", "confidence", "reasoning", "issues", "suggestions")
+    __slots__ = ("confidence", "issues", "reasoning", "suggestions", "value")
 
     def __init__(
         self,
@@ -51,7 +51,7 @@ class Verdict:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Verdict":
+    def from_dict(cls, data: dict) -> Verdict:
         return cls(
             value=VERDICT(data.get("verdict", "approve")),
             confidence=float(data.get("confidence", 0.5)),

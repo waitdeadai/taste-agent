@@ -22,14 +22,14 @@ def format_diff_issue(diff: str, issue_location: str) -> str:
     if ":" in issue_location:
         file_part, line_part = issue_location.rsplit(":", 1)
         try:
-            line_num = int(line_part)
+            int(line_part)
         except ValueError:
             line_part = ""
 
     lines = diff.split("\n")
     highlighted_lines = []
 
-    for i, line in enumerate(lines):
+    for _i, line in enumerate(lines):
         # Highlight lines from the relevant file
         if file_part in line and line_part:
             highlighted_lines.append(f">>> {line} <<<")

@@ -6,21 +6,21 @@ taste.memory principles, and the output to evaluate.
 
 from __future__ import annotations
 
-import textwrap
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from taste_agent.models.taste_spec import TasteSpec
     from taste_agent.core.memory import TasteMemory
+    from taste_agent.models.taste_spec import TasteSpec
 
 
 def build_verdict_prompt(
     task: str,
-    taste_spec: "TasteSpec | None",
-    taste_memory: "TasteMemory | None",
+    taste_spec: TasteSpec | None,
+    taste_memory: TasteMemory | None,
     output_files: list[str],
     file_contents: dict[str, str],
     diff: str = "",
+    persona: str = "",
 ) -> str:
     """Build the full verdict prompt for a taste evaluation.
 
@@ -31,15 +31,17 @@ def build_verdict_prompt(
         output_files: List of files that were modified.
         file_contents: Dict of filename -> content for files to evaluate.
         diff: Optional git diff string.
+        persona: Optional persona name (e.g. "marketing", "api", "internal").
 
     Returns:
         The full prompt string to send to the LLM.
     """
-    from taste_agent.prompts.taste_system import TASTE_SYSTEM_PROMPT, DEFAULT_TASTE_PROMPT
+    from taste_agent.prompts.taste_system import DEFAULT_TASTE_PROMPT, TASTE_SYSTEM_PROMPT
 
     # Build taste.md block
     if taste_spec:
-        taste_md_block = _build_taste_spec_block(taste_spec)
+        effective_spec = taste_spec.route_persona(output_files[0]) if output_files else taste_spec
+        taste_md_block = _build_taste_spec_block(effective_spec, persona)
     else:
         taste_md_block = DEFAULT_TASTE_PROMPT
 
@@ -52,8 +54,10 @@ def build_verdict_prompt(
     # Build diff block
     diff_block = f"\n## Diff Against Previous\n```diff\n{diff}\n```\n" if diff else ""
 
+    persona_note = f"\n[Evaluating as persona: {persona}]" if persona else ""
+
     return f"""## Task
-{task}
+{task}{persona_note}
 
 {TASTE_SYSTEM_PROMPT}
 
@@ -66,12 +70,14 @@ def build_verdict_prompt(
 Return ONLY valid JSON as specified in the system prompt."""
 
 
-def _build_taste_spec_block(spec: "TasteSpec") -> str:
+def _build_taste_spec_block(spec: TasteSpec, persona: str = "") -> str:
     """Build the taste.md content block for the prompt."""
     parts = ["## taste.md (Human's Design Specification)"]
 
     if spec.project_name:
         parts.append(f"\nProject: {spec.project_name}\n")
+    if persona:
+        parts.append(f"\nPersona: {persona}\n")
 
     if spec.aesthetic_direction:
         parts.append(f"\n### Visual Theme & Atmosphere\n{spec.aesthetic_direction}")
@@ -80,7 +86,7 @@ def _build_taste_spec_block(spec: "TasteSpec") -> str:
         parts.append(f"\nMood: {', '.join(spec.mood_words)}")
 
     if spec.benchmarks:
-        parts.append(f"\n### Reference Benchmarks\n")
+        parts.append("\n### Reference Benchmarks\n")
         for b in spec.benchmarks:
             parts.append(f"- {b}")
 
@@ -104,13 +110,28 @@ def _build_taste_spec_block(spec: "TasteSpec") -> str:
     if spec.non_negotiables:
         parts.append(f"\n### Non-Negotiables (Hard Rules)\n{spec.non_negotiables_text()}")
 
+    if spec.architecture_layers:
+        parts.append("\n### Architecture Standards\n")
+        for layer in spec.architecture_layers:
+            parts.append(f"- {layer}")
+
+    if spec.naming_conventions:
+        parts.append("\n### Naming Conventions\n")
+        for key, val in spec.naming_conventions.items():
+            parts.append(f"- {key}: {val}")
+
+    if spec.api_design:
+        parts.append("\n### API Design\n")
+        for key, val in spec.api_design.items():
+            parts.append(f"- {key}: {val}")
+
     if spec.agent_prompt_guide:
         parts.append(f"\n### Agent Prompt Guide\n{spec.agent_prompt_guide}")
 
     return "\n".join(parts)
 
 
-def _build_memory_block(memory: "TasteMemory") -> str:
+def _build_memory_block(memory: TasteMemory) -> str:
     """Build the taste.memory content block for the prompt."""
     entries = memory.entries()
     if not entries:

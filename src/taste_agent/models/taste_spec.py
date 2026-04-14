@@ -8,6 +8,86 @@ from pathlib import Path
 
 
 @dataclass
+class ChangelogEntry:
+    """A changelog entry tracking taste.md evolution."""
+
+    version: str  # e.g. "v2.1"
+    date: str  # e.g. "2026-06-01"
+    change: str  # description of what changed
+    reason: str = ""  # why it changed
+
+
+@dataclass
+class VisionSpec:
+    """taste.vision — intent document capturing WHY behind the rules.
+
+    Separate from taste.md rules. Written once, read occasionally.
+    Used as a pre-filter: if output contradicts project intent,
+    no amount of aesthetic correctness matters.
+    """
+
+    why_project_exists: str = ""
+    what_p95_looks_like: str = ""
+    anti_goals: list[str] = field(default_factory=list)
+    non_negotiable_violations: list[str] = field(default_factory=list)
+    project_purpose: str = ""  # one-line summary
+    benchmark_urls: list[str] = field(default_factory=list)
+
+    @classmethod
+    def from_markdown(cls, content: str) -> VisionSpec:
+        """Parse a taste.vision markdown file into a VisionSpec."""
+        spec = cls()
+        lines = content.split("\n")
+        current_section = ""
+
+        for line in lines:
+            stripped = line.strip()
+            # Section headers
+            h_match = re.match(r"(?:#+|##+)\s*([\w\s\-]+?)(?:\s|$)", stripped)
+            if h_match:
+                current_section = h_match.group(1).strip().lower()
+                continue
+
+            if not current_section:
+                continue
+
+            # Parse sections
+            if "why" in current_section or "purpose" in current_section:
+                if stripped and not stripped.startswith("#"):
+                    spec.why_project_exists += " " + stripped
+                    spec.why_project_exists = spec.why_project_exists.strip()
+
+            elif "p95" in current_section or "looks like" in current_section:
+                if stripped and not stripped.startswith("#"):
+                    spec.what_p95_looks_like += " " + stripped
+                    spec.what_p95_looks_like = spec.what_p95_looks_like.strip()
+
+            elif "anti-goal" in current_section.lower() or "anti goal" in current_section.lower():
+                if stripped.startswith("- ") or stripped.startswith("* "):
+                    spec.anti_goals.append(stripped[2:].strip())
+                elif stripped and not stripped.startswith("#"):
+                    spec.anti_goals.append(stripped)
+
+            elif "benchmark" in current_section:
+                if stripped.startswith("- ") or stripped.startswith("* "):
+                    url = stripped[2:].strip().split("—")[0].strip()
+                    if url.startswith("http"):
+                        spec.benchmark_urls.append(url)
+
+        return spec
+
+    def serves_purpose(self, output: str) -> bool:
+        """Check if output aligns with project purpose.
+
+        Used as pre-filter: violations of vision spec are existential —
+        if output contradicts project intent, reject immediately.
+        """
+        output_lower = output.lower()
+        # Check anti-goals — if output exhibits any anti-goal pattern, reject
+        return all(anti.lower() not in output_lower for anti in self.anti_goals)
+
+
+@dataclass
 class ColorToken:
     """A color in the design palette."""
 
@@ -65,6 +145,7 @@ class TasteSpec:
     """
 
     project_name: str = ""
+    version: str = ""  # e.g. "v2.1"
     aesthetic_direction: str = ""
     mood_words: list[str] = field(default_factory=list)
     benchmarks: list[str] = field(default_factory=list)
@@ -79,17 +160,84 @@ class TasteSpec:
     revision_history: list[RevisionNote] = field(default_factory=list)
     agent_prompt_guide: str = ""
 
+    # v2: multi-persona support
+    personas: dict[str, TasteSpec] = field(default_factory=dict)
+    # v2: architecture/naming/API rules (parsed from taste.md)
+    architecture_layers: list[str] = field(default_factory=list)
+    naming_conventions: dict[str, str] = field(default_factory=dict)
+    api_design: dict[str, str] = field(default_factory=dict)
+    # v2: versioning
+    changelog: list[ChangelogEntry] = field(default_factory=list)
+    # v2: vision spec (separate taste.vision document)
+    vision_spec: VisionSpec | None = field(default=None)
+
+    # Routing table: compiled patterns → persona name (built on first route)
+    _routing_table: dict[str, str] = field(default_factory=dict, repr=False)
+
+    def route_persona(self, file_path: str) -> TasteSpec:
+        """Return the persona-specific TasteSpec for a given file path.
+
+        Routing rules:
+        - webapp/, pages/, site/, marketing/, app/ → persona.marketing
+        - internal/, tools/, admin/, dashboard/ → persona.internal
+        - api/, routes/, endpoints/, v#+/ → persona.api (where # is a digit)
+        - Default → self (base spec)
+        """
+        import re
+
+        if not self._routing_table:
+            self._build_routing_table()
+
+        for pattern, persona_name in self._routing_table.items():
+            if re.match(pattern, file_path):
+                persona = self.personas.get(persona_name)
+                if persona:
+                    return persona
+        return self
+
+    def _build_routing_table(self) -> None:
+        """Build the routing table from persona routing rules."""
+        from taste_agent.models.persona import DEFAULT_ROUTING
+
+        self._routing_table = {}
+        # Always start with DEFAULT_ROUTING
+        for pattern, persona_name in DEFAULT_ROUTING:
+            self._routing_table[pattern] = persona_name
+        # Persona-specific overrides
+        for _name, persona in self.personas.items():
+            routing_rules = getattr(persona, "routing_rules", None)
+            if routing_rules:
+                for pattern, persona_name in routing_rules:
+                    self._routing_table[pattern] = persona_name
+
     @classmethod
-    def from_markdown(cls, content: str) -> "TasteSpec":
+    def from_markdown(cls, content: str) -> TasteSpec:
         """Parse a taste.md markdown file into a TasteSpec."""
         spec = cls()
         lines = content.split("\n")
         current_section = ""
         current_component_name = ""
         current_component_desc: list[str] = []
+        current_persona_name = ""
+        current_persona_lines: list[str] = []
+        in_persona_block = False
 
         for line in lines:
             stripped = line.strip()
+
+            # Persona blocks: [persona.name]
+            persona_match = re.match(r"\[persona\.(\w+)\]", stripped)
+            if persona_match:
+                # Flush current persona
+                if in_persona_block and current_persona_name:
+                    persona_spec = cls.from_markdown("\n".join(current_persona_lines))
+                    persona_spec.project_name = f"{spec.project_name} [{current_persona_name}]"
+                    spec.personas[current_persona_name] = persona_spec
+                current_persona_name = persona_match.group(1)
+                current_persona_lines = []
+                in_persona_block = True
+                current_section = ""
+                continue
 
             # Section headers (## 1. through ## 9.)
             section_match = re.match(r"##\s+(\d+)\.\s+(.+)", stripped)
@@ -102,11 +250,27 @@ class TasteSpec:
                 current_section = stripped[3:].strip().lower()
                 continue
 
+            # If in a persona block, collect lines for recursive parsing
+            if in_persona_block:
+                current_persona_lines.append(stripped)
+                continue
+
             if not current_section:
                 # Check for title (# Taste — ...)
-                title_match = re.match(r"#\s+Taste\s+[-—]\s+(.+)", stripped)
+                title_match = re.match(r"#\s+Taste\s+[-—]\s+(.+?)\s*(\([^)]+\))?$", stripped)
                 if title_match:
                     spec.project_name = title_match.group(1).strip()
+                    version_match = re.search(r"\(([^)]+)\)", stripped)
+                    if version_match:
+                        spec.version = version_match.group(1).strip()
+                # Check for changelog entries at top
+                changelog_match = re.match(r"(?:-\s*)?v?(\d+\.\d+)\s+\((\d{4}-\d{2}-\d{2})\):\s*(.+)", stripped)
+                if changelog_match:
+                    spec.changelog.append(ChangelogEntry(
+                        version=changelog_match.group(1),
+                        date=changelog_match.group(2),
+                        change=changelog_match.group(3),
+                    ))
                 continue
 
             # Section 1: Visual Theme & Atmosphere
@@ -227,16 +391,74 @@ class TasteSpec:
                     spec.agent_prompt_guide += " " + stripped
                     spec.agent_prompt_guide = spec.agent_prompt_guide.strip()
 
+            # Section 10: Architecture Standards (v2)
+            elif "architect" in current_section and ("layer" in current_section or "standard" in current_section):
+                if stripped.startswith("- ") or stripped.startswith("* "):
+                    rule = stripped[2:].strip()
+                    if rule and rule not in spec.architecture_layers:
+                        spec.architecture_layers.append(rule)
+                elif "layer" in stripped.lower() and ":" in stripped:
+                    key, val = stripped.split(":", 1)
+                    key = key.strip().lower()
+                    val = val.strip()
+                    if key and val:
+                        spec.architecture_layers.append(f"{key}: {val}")
+
+            # Section 11: Naming Conventions (v2)
+            elif "naming" in current_section and ("convention" in current_section or "standard" in current_section):
+                if ":" in stripped and not stripped.startswith("#") and not stripped.startswith("-"):
+                    key, val = stripped.split(":", 1)
+                    key = key.strip().lower().replace(" ", "_")
+                    val = val.strip()
+                    if key and val:
+                        spec.naming_conventions[key] = val
+                elif stripped.startswith("- ") or stripped.startswith("* "):
+                    rule = stripped[2:].strip()
+                    if rule:
+                        # Parse "files: snake_case.py" style
+                        if ":" in rule:
+                            k, v = rule.split(":", 1)
+                            spec.naming_conventions[k.strip().lower()] = v.strip()
+
+            # Section 12: API Design (v2)
+            elif "api design" in current_section or ("api" in current_section and "philosophy" in current_section):
+                if ":" in stripped and not stripped.startswith("#"):
+                    key, val = stripped.split(":", 1)
+                    key = key.strip().lower().replace(" ", "_")
+                    val = val.strip()
+                    if key and val:
+                        spec.api_design[key] = val
+                elif stripped.startswith("- ") or stripped.startswith("* "):
+                    rule = stripped[2:].strip()
+                    if rule:
+                        spec.api_design[f"rule_{len(spec.api_design)}"] = rule
+
+            # Section 13: Changelog (v2)
+            elif "changelog" in current_section:
+                changelog_match = re.match(r"(?:-\s*)?v?(\d+\.\d+)\s+\((\d{4}-\d{2}-\d{2})\):\s*(.+)", stripped)
+                if changelog_match:
+                    spec.changelog.append(ChangelogEntry(
+                        version=changelog_match.group(1),
+                        date=changelog_match.group(2),
+                        change=changelog_match.group(3),
+                    ))
+
         # Flush last component
         if current_component_name and current_component_desc:
             spec.component_standards.append(
                 ComponentStandard(name=current_component_name, description=" ".join(current_component_desc))
             )
 
+        # Flush last persona block
+        if in_persona_block and current_persona_name and current_persona_lines:
+            persona_spec = cls.from_markdown("\n".join(current_persona_lines))
+            persona_spec.project_name = f"{spec.project_name} [{current_persona_name}]"
+            spec.personas[current_persona_name] = persona_spec
+
         return spec
 
     @classmethod
-    def from_path(cls, path: Path | str) -> "TasteSpec":
+    def from_path(cls, path: Path | str) -> TasteSpec:
         """Load TasteSpec from a taste.md file path."""
         p = Path(path)
         if not p.exists():

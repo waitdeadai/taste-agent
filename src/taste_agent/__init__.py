@@ -18,21 +18,28 @@ Usage:
     print(result.verdict)  # APPROVE | REVISE | REJECT
 """
 
-from taste_agent.core.taste_agent import TasteAgent
-from taste_agent.core.verdict import VERDICT, Verdict
 from taste_agent.core.config import TasteConfig
 from taste_agent.core.memory import TasteMemory
-from taste_agent.models.evaluation import EvaluationResult
-from taste_agent.models.taste_spec import TasteSpec
+from taste_agent.core.taste_agent import TasteAgent
+from taste_agent.core.verdict import VERDICT, Verdict
+from taste_agent.models.evaluation import EvaluationResult, Issue
+from taste_agent.models.persona import PersonaSpec
+from taste_agent.models.severity import Severity, SeverityCounts
+from taste_agent.models.taste_spec import TasteSpec, VisionSpec
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
-    "TasteAgent",
     "VERDICT",
-    "Verdict",
+    "EvaluationResult",
+    "Issue",
+    "PersonaSpec",
+    "Severity",
+    "SeverityCounts",
+    "TasteAgent",
     "TasteConfig",
     "TasteMemory",
-    "EvaluationResult",
     "TasteSpec",
+    "Verdict",
+    "VisionSpec",
 ]

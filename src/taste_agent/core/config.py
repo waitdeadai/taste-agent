@@ -11,10 +11,15 @@ from pydantic import BaseModel, Field
 class TasteWeights(BaseModel):
     """Weights for evaluation dimensions."""
 
-    aesthetic: float = 0.3
-    ux: float = 0.3
-    copy: float = 0.2
-    adherence: float = 0.2
+    aesthetic: float = 0.2
+    ux: float = 0.15
+    copy: float = 0.15
+    adherence: float = 0.1
+    architecture: float = 0.1
+    naming: float = 0.1
+    api_design: float = 0.1
+    code_style: float = 0.05
+    coherence: float = 0.05
 
 
 class TasteConfig(BaseModel):
@@ -56,7 +61,17 @@ class TasteConfig(BaseModel):
 
     def model_post_init(self, _) -> None:
         """Validate weights sum to 1.0."""
-        total = self.weights.aesthetic + self.weights.ux + self.weights.copy + self.weights.adherence
+        total = (
+            self.weights.aesthetic
+            + self.weights.ux
+            + self.weights.copy
+            + self.weights.adherence
+            + self.weights.architecture
+            + self.weights.naming
+            + self.weights.api_design
+            + self.weights.code_style
+            + self.weights.coherence
+        )
         if abs(total - 1.0) > 0.01:
             raise ValueError(f"Taste weights must sum to 1.0, got {total}")
 

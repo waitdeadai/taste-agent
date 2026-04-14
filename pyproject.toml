@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "taste-agent"
-version = "0.1.0"
+version = "0.2.0"
 description = "Adversarial design director for AI coding agents — taste.md + taste.memory"
 readme = "README.md"
 license = "Apache-2.0"
@@ -55,12 +55,19 @@ dev = [
     "pre-commit>=3.5.0",
     "httpx>=0.27.0",
 ]
+cli = [
+    "click>=8.0",
+    "questionary>=2.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/waitdeadai/taste-agent"
 Documentation = "https://github.com/waitdeadai/taste-agent#readme"
 Repository = "https://github.com/waitdeadai/taste-agent"
 Issues = "https://github.com/waitdeadai/taste-agent/issues"
+
+[project.scripts]
+taste = "taste_agent.cli.main:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/taste_agent"]
@@ -84,6 +91,9 @@ select = [
 ignore = [
     "E501",  # line too long — handled by formatter
     "B028",  # no explicit stacklevel — false positive on warnings
+    "SIM102",  # nested if statements — sometimes intentional for readability
+    "RUF012",  # mutable class attributes — lists are intentional constant patterns
+    "RUF001",  # ambiguous dash/minus — intentional in spec strings
 ]
 
 [tool.pytest.ini_options]

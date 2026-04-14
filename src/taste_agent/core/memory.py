@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -17,18 +17,20 @@ class MemoryEntry:
     """
 
     __slots__ = (
+        "applied_correctly",
+        "category",
         "entry_id",
-        "timestamp",
-        "task_hash",
-        "task_description",
         "file_path",
-        "verdict",
-        "reasoning",
         "issues",
         "principle",
-        "category",
+        "reasoning",
+        "severity",
+        "task_description",
+        "task_hash",
+        "timestamp",
+        "verdict",
         "was_applied",
-        "applied_correctly",
+        "why_this_matters",
     )
 
     def __init__(
@@ -45,9 +47,11 @@ class MemoryEntry:
         applied_correctly: bool | None = None,
         entry_id: str | None = None,
         timestamp: str | None = None,
+        severity: str = "P2",
+        why_this_matters: str = "",
     ):
         self.entry_id = entry_id or f"tm-{uuid.uuid4().hex[:12]}"
-        self.timestamp = timestamp or datetime.now(timezone.utc).isoformat()
+        self.timestamp = timestamp or datetime.now(UTC).isoformat()
         self.task_hash = task_hash or self._hash_task(task_description)
         self.task_description = task_description
         self.file_path = file_path
@@ -55,7 +59,9 @@ class MemoryEntry:
         self.reasoning = reasoning
         self.issues = issues or []
         self.principle = principle
-        self.category = category  # aesthetic | ux | copy | adherence
+        self.category = category  # aesthetic | ux | copy | adherence | architecture | naming | api_design | code_style | coherence
+        self.severity = severity  # P0 | P1 | P2 | P3
+        self.why_this_matters = why_this_matters  # mentor mode explanation
         self.was_applied = was_applied
         self.applied_correctly = applied_correctly
 
@@ -78,12 +84,14 @@ class MemoryEntry:
             "issues": self.issues,
             "principle": self.principle,
             "category": self.category,
+            "severity": self.severity,
+            "why_this_matters": self.why_this_matters,
             "was_applied": self.was_applied,
             "applied_correctly": self.applied_correctly,
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "MemoryEntry":
+    def from_dict(cls, data: dict) -> MemoryEntry:
         return cls(
             entry_id=data["entry_id"],
             timestamp=data["timestamp"],
@@ -97,13 +105,15 @@ class MemoryEntry:
             category=data.get("category", "aesthetic"),
             was_applied=data.get("was_applied", False),
             applied_correctly=data.get("applied_correctly"),
+            severity=data.get("severity", "P2"),
+            why_this_matters=data.get("why_this_matters", ""),
         )
 
     def to_jsonl(self) -> str:
         return json.dumps(self.to_dict(), ensure_ascii=False)
 
     @classmethod
-    def from_jsonl(cls, line: str) -> "MemoryEntry":
+    def from_jsonl(cls, line: str) -> MemoryEntry:
         return cls.from_dict(json.loads(line))
 
     def __repr__(self) -> str:
@@ -182,6 +192,8 @@ class TasteMemory:
         issues: list[str] | None = None,
         principle: str = "",
         category: str = "aesthetic",
+        severity: str = "P2",
+        why_this_matters: str = "",
     ) -> MemoryEntry:
         """Convenience: create and add a memory entry."""
         entry = MemoryEntry(
@@ -192,6 +204,8 @@ class TasteMemory:
             issues=issues,
             principle=principle,
             category=category,
+            severity=severity,
+            why_this_matters=why_this_matters,
         )
         self.add_entry(entry)
         return entry
@@ -223,7 +237,7 @@ class TasteMemory:
         try:
             meta = json.loads(meta_path.read_text())
             last_ts = datetime.fromisoformat(meta["last_consolidation"])
-            age_hours = (datetime.now(timezone.utc) - last_ts).total_seconds() / 3600
+            age_hours = (datetime.now(UTC) - last_ts).total_seconds() / 3600
             return age_hours >= 24
         except (json.JSONDecodeError, KeyError, ValueError):
             return True
@@ -268,7 +282,7 @@ class TasteMemory:
         meta_path.write_text(
             json.dumps(
                 {
-                    "last_consolidation": datetime.now(timezone.utc).isoformat(),
+                    "last_consolidation": datetime.now(UTC).isoformat(),
                     "entries_before": original_count,
                     "entries_after": len(deduplicated),
                     "removed": removed,

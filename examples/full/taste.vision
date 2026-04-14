@@ -1,0 +1,44 @@
+# Vision — Smoothrevenue.com
+
+## Why This Project Exists
+
+We build tools for enterprise infrastructure teams who are tired of AI demos
+that look great in screenshots but fall apart in production. Every design
+decision should make a skeptical CTO nod.
+
+We are not trying to be liked — we are trying to be trusted. Enterprise buyers
+have been burned by overpromised AI. Our job is to make them feel confident, not excited.
+
+## What We Are Not
+
+- **Not a startup.** We don't use "revolutionary" or "game-changing."
+- **Not a design agency.** We don't lead with visuals — we lead with precision.
+- **Not trying to be loved.** We're trying to be trusted.
+- **Not generic.** Every word should earn its place.
+
+## Anti-Goals (Explicitly Rejected)
+
+- Features that require a PhD to understand
+- UIs that hide complexity instead of explaining it clearly
+- Documentation written for the team that built it, not the team inheriting it
+- Placeholder copy that could apply to any company in any industry
+- Glassmorphism that looks amateur (gradient overlays, excessive blur)
+- Motion that calls attention to itself
+
+## What P95 Looks Like for This Project
+
+Linear-quality precision. Stripe Radar data density. Not prettier — clearer.
+The person who inherits this codebase in 3 years should not need to ask "why does this exist?"
+The visitor should think "these people have done this 100 times at enterprise scale."
+
+Reference: https://linear.app — dark glass, precision typography, zero fluff
+Reference: https://stripe.com/radar — data density without clutter
+Reference: https://claude.ai — warm AI authority, conversational but precise
+
+## Where We Will Not Compromise
+
+- **Data integrity:** never silently swallow errors — surface them clearly
+- **Operational clarity:** every action has a traceable log entry
+- **API contracts:** once published, response shapes are versioned, never silently changed
+- **Copy specificity:** no hallmark/placeholder copy — every word is intentional
+- **Performance:** no gratuitous animations that delay perceived responsiveness

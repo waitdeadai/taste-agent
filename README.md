@@ -1,5 +1,9 @@
 # taste-agent
 
+<p align="center">
+  <img src="docs/mascot.png" alt="taste-agent mascot" width="256" />
+</p>
+
 **"Your AI coding agent is blind to taste — on the full stack. Fix that."**
 
 `taste-agent` is an adversarial design director for AI coding agents that enforces *your* vision — not its generic default output — across the entire codebase: frontend *and* backend, architecture *and* copy, API contracts *and* naming conventions. Write `taste.md` once, `taste.vision` to capture intent, then let `taste-agent` adversarially evaluate every output with `APPROVE | REVISE | REJECT` verdicts. `taste.memory` learns what works across your project.
@@ -624,6 +628,8 @@ taste-agent/
 │   ├── full/taste.md
 │   └── full/taste.vision
 └── docs/
+    ├── mascot.png              # Official mascot (PNG)
+    ├── mascot.svg              # CLI mascot (SVG, inverted triangle + tentacles)
     ├── GETTING_STARTED.md
     ├── TASTE_SPEC_FORMAT.md
     ├── TASTE_VISION_FORMAT.md

@@ -21,6 +21,22 @@ class TasteWeights(BaseModel):
     code_style: float = 0.05
     coherence: float = 0.05
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        total = (
+            self.aesthetic
+            + self.ux
+            + self.copy
+            + self.adherence
+            + self.architecture
+            + self.naming
+            + self.api_design
+            + self.code_style
+            + self.coherence
+        )
+        if abs(total - 1.0) > 0.01:
+            raise ValueError(f"Taste weights must sum to 1.0, got {total}")
+
 
 class TasteConfig(BaseModel):
     """Configuration for the Taste Agent.

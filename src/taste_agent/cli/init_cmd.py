@@ -101,12 +101,21 @@ error_format: {{"error": {{"code": "...", "message": "..."}}}}
 response_envelope: {{"data": ..., "meta": {{}}}}
 """
 
+AESTHETIC_MAP = {
+    "B2B SaaS": "Dark institutional — Linear meets Stripe",
+    "consumer": "Light and playful — Figma meets Airbnb",
+    "developer tools": "Technical precision — Vercel meets Raycast",
+    "consulting": "Editorial and confident — McKinsey meets Linear",
+    "other": "Dark and premium — Apple meets Linear",
+}
+
 
 @click.command()
 @click.option("--defaults", is_flag=True, help="Skip questions, use defaults.")
 @click.option("--output", type=str, default="taste.md", help="Output path.")
+@click.option("--industry", type=str, default=None, help="Industry preset (used with --defaults).")
 @click.pass_context
-def init(ctx: click.Context, defaults: bool, output: str) -> None:
+def init(ctx: click.Context, defaults: bool, output: str, industry: str | None) -> None:
     """Bootstrap a new taste.md for this project."""
     project_root = ctx.obj["project_root"]
     output_path = project_root / output
@@ -118,10 +127,15 @@ def init(ctx: click.Context, defaults: bool, output: str) -> None:
     if defaults:
         date = "2026-04-14"
         project_name = project_root.name
+        aesthetic_str = (
+            AESTHETIC_MAP.get(industry, "Dark, premium, institutional — Apple meets Linear")
+            if industry
+            else "Dark, premium, institutional — Apple meets Linear"
+        )
         taste_md = TEMPLATE.format(
             project_name=project_name,
             date=date,
-            aesthetic="Dark, premium, institutional — Apple meets Linear",
+            aesthetic=aesthetic_str,
             mood_words="dark, bold, precise, premium",
             benchmarks="",
             copy_voice="Confident, direct, specific — enterprise-grade authority",
@@ -178,17 +192,10 @@ def init(ctx: click.Context, defaults: bool, output: str) -> None:
     ).ask()
 
     date = "2026-04-14"
-    aesthetic_map = {
-        "B2B SaaS": "Dark institutional — Linear meets Stripe",
-        "consumer": "Light and playful — Figma meets Airbnb",
-        "developer tools": "Technical precision — Vercel meets Raycast",
-        "consulting": "Editorial and confident — McKinsey meets Linear",
-        "other": "Dark and premium — Apple meets Linear",
-    }
     taste_md = TEMPLATE.format(
         project_name=project_name or project_root.name,
         date=date,
-        aesthetic=aesthetic or aesthetic_map.get(industry, "Dark, premium"),
+        aesthetic=aesthetic or AESTHETIC_MAP.get(industry, "Dark, premium"),
         mood_words=mood_words or "dark, bold, precise",
         benchmarks=benchmarks or "- https://linear.app",
         copy_voice=copy_voice or "Confident and direct",

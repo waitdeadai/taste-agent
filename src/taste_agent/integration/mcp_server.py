@@ -206,9 +206,12 @@ class MCPSTDIOServer:
             return {"valid": False, "issues": [str(e)]}
 
         issues = []
-        for attr in ["aesthetic_direction", "copy_voice", "non_negotiables"]:
+        for attr in ["aesthetic_direction", "copy_voice"]:
             if not getattr(spec, attr, "").strip():
                 issues.append(f"Section '{attr}' is empty or missing")
+
+        if not spec.non_negotiables:
+            issues.append("Section 'non_negotiables' is empty or missing")
 
         for token in spec.color_tokens:
             if not re.match(r"^#[0-9a-fA-F]{6,8}$", token.hex):
@@ -255,24 +258,40 @@ class MCPSTDIOServer:
                 self._send_error(-32700, "Parse error")
                 continue
 
-            method = request.get("method", "")
-            params = request.get("params", {})
-            msg_id = request.get("id")
+            result = await self._handle_request(request)
+            if result is not None:
+                print(json.dumps(result), flush=True)
 
-            handler = self._handlers.get(method)
-            if not handler:
-                self._send_error(-32601, f"Method not found: {method}", msg_id)
-                continue
+    async def _handle_request(self, request: dict) -> dict | None:
+        """Handle a single JSON-RPC request. Returns response dict or None for notifications."""
+        # Missing method key is a different error than unknown method
+        if "method" not in request:
+            return {"jsonrpc": JSONRPC_REQUEST, "id": request.get("id"), "error": {"code": -32600, "message": "Invalid Request: method is required"}}
 
-            try:
-                result = await handler(params)
-                if msg_id is not None:
-                    self._send_response(msg_id, result)
-            except MCPError as e:
-                self._send_error(e.code, e.message, msg_id, e.data)
-            except Exception as e:
-                self.logger.exception("Handler error")
-                self._send_error(-32603, f"Internal error: {e}", msg_id)
+        method = request.get("method", "")
+        params = request.get("params", {})
+        msg_id = request.get("id")
+
+        handler = self._handlers.get(method)
+        if not handler:
+            error = {"jsonrpc": JSONRPC_REQUEST, "id": msg_id, "error": {"code": -32601, "message": f"Method not found: {method}"}}
+            return error if msg_id is not None else None
+
+        try:
+            result = await handler(params)
+            if msg_id is None:
+                return None  # Notification — no response
+            return {"jsonrpc": JSONRPC_REQUEST, "id": msg_id, "result": result}
+        except MCPError as e:
+            return {"jsonrpc": JSONRPC_REQUEST, "id": msg_id, "error": {"code": e.code, "message": e.message, "data": e.data}}
+        except Exception as e:
+            self.logger.exception("Handler error")
+            return {"jsonrpc": JSONRPC_REQUEST, "id": msg_id, "error": {"code": -32603, "message": f"Internal error: {e}"}}
+
+    # For backward compatibility with tests that call _handle directly
+    async def _handle(self, request: dict) -> dict | None:
+        """Handle a single JSON-RPC request (test interface)."""
+        return await self._handle_request(request)
 
     def _send_response(self, msg_id: Any, result: Any) -> None:
         """Send a JSON-RPC response."""

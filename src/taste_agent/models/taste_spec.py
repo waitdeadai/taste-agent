@@ -43,7 +43,7 @@ class VisionSpec:
         for line in lines:
             stripped = line.strip()
             # Section headers
-            h_match = re.match(r"(?:#+|##+)\s*([\w\s\-]+?)(?:\s|$)", stripped)
+            h_match = re.match(r"(?:#+|##+)\s*([\w\s\-]+)(?:\s|$)", stripped)
             if h_match:
                 current_section = h_match.group(1).strip().lower()
                 continue

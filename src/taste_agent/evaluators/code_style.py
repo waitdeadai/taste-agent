@@ -22,9 +22,8 @@ class CodeStyleEvaluator:
     """
 
     # Magic number pattern: bare numbers in expressions (excluding common cases)
-    MAGIC_NUMBER_PATTERN = re.compile(
-        r"(?<![from|import|def|class|=|(|\s)])\b(\d{2,})\b"
-    )
+    # Excludes numbers after: whitespace, =, or (
+    MAGIC_NUMBER_PATTERN = re.compile(r"(?<![=\s\(])(\d{2,})\b")
 
     # What-comment pattern: comments that describe what code does
     WHAT_COMMENT_PATTERN = re.compile(

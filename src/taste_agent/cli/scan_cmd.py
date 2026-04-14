@@ -12,7 +12,7 @@ from taste_agent.models.severity import ALL_DIMENSIONS
 
 @click.command()
 @click.option("--path", type=click.Path(Path), default=".", help="Path to scan.")
-@click.option("--output", type=click.Path(Path), default=None, help="Output report path (default: stdout).")
+@click.option("--output", type=click.Path(exists=False), default=None, help="Output report path (default: stdout).")
 @click.pass_context
 def scan(ctx: click.Context, path: str, output: str | None) -> None:
     """Scan a project with all 9 evaluators and produce a coherence report."""

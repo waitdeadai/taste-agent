@@ -10,8 +10,8 @@ from taste_agent.models.taste_spec import TasteSpec
 
 
 @click.command()
-@click.argument("old_path", type=click.Path(Path))
-@click.argument("new_path", type=click.Path(Path))
+@click.argument("old_path", type=str)
+@click.argument("new_path", type=str)
 @click.option("--color/--no-color", default=True)
 @click.pass_context
 def diff(ctx: click.Context, old_path: str, new_path: str, color: bool) -> None:

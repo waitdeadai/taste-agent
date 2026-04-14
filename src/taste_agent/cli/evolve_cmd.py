@@ -16,7 +16,7 @@ def evolve(ctx: click.Context, dry_run: bool) -> None:
     Patterns detected from memory entries inform potential spec additions.
     """
     project_root = ctx.obj["project_root"]
-    config = TasteConfig(enabled=True)
+    config = TasteConfig(enabled=True, memory_scope="project")
     memory_path = config.resolve_memory_path(project_root)
 
     if not memory_path.exists():
@@ -66,6 +66,6 @@ def evolve(ctx: click.Context, dry_run: bool) -> None:
 
     if dry_run:
         click.echo("\n".join(lines))
+        click.echo("\n(Dry-run complete. Run without --dry-run to append suggestions to taste.md)")
     else:
         click.echo("\n".join(lines))
-        click.echo("\n(Dry-run complete. Run without --dry-run to append suggestions to taste.md)")

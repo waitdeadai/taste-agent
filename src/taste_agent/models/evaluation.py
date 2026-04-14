@@ -33,8 +33,13 @@ class Issue:
 
     @classmethod
     def from_dict(cls, data: dict) -> Issue:
+        sev = data.get("severity", "P2")
+        try:
+            severity = Severity(sev)
+        except ValueError:
+            severity = Severity.P2
         return cls(
-            severity=Severity(data.get("severity", "P2")),
+            severity=severity,
             dimension=data.get("dimension", ""),
             location=data.get("location", ""),
             problem=data.get("problem", ""),

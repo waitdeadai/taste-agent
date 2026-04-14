@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="taste-agent mascot">
+  <title>taste-agent mascot</title>
+  <desc>taste v2 mascot — inverted triangle with 2 in eye and tentacles</desc>
+
+  <defs>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFB347"/>
+      <stop offset="100%" stop-color="#FF8C00"/>
+    </linearGradient>
+    <linearGradient id="tentacleGrad" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#FF8C00"/>
+      <stop offset="100%" stop-color="#FFB347"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Tentacles — 4 curling upward from top of triangle -->
+  <!-- Left tentacle -->
+  <path d="M 88 72 Q 70 45 58 28 Q 52 18 48 8"
+        stroke="url(#tentacleGrad)" stroke-width="10" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="48" cy="8" r="6" fill="#FFD700"/>
+
+  <!-- Mid-left tentacle -->
+  <path d="M 112 62 Q 108 38 110 18 Q 112 6 118 2"
+        stroke="url(#tentacleGrad)" stroke-width="10" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="118" cy="2" r="6" fill="#FFD700"/>
+
+  <!-- Mid-right tentacle -->
+  <path d="M 144 62 Q 148 38 146 18 Q 144 6 138 2"
+        stroke="url(#tentacleGrad)" stroke-width="10" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="138" cy="2" r="6" fill="#FFD700"/>
+
+  <!-- Right tentacle -->
+  <path d="M 168 72 Q 186 45 198 28 Q 204 18 208 8"
+        stroke="url(#tentacleGrad)" stroke-width="10" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="208" cy="8" r="6" fill="#FFD700"/>
+
+  <!-- Inverted triangle body — apex at bottom, base at top -->
+  <polygon
+    points="24,72 232,72 128,220"
+    fill="url(#bodyGrad)"
+    stroke="#1a1a1a"
+    stroke-width="5"
+    stroke-linejoin="round"
+  />
+
+  <!-- Inner triangle highlight -->
+  <polygon
+    points="38,80 218,80 128,206"
+    fill="none"
+    stroke="#FFD700"
+    stroke-width="2"
+    stroke-linejoin="round"
+    opacity="0.4"
+  />
+
+  <!-- Eye socket -->
+  <ellipse cx="128" cy="120" rx="32" ry="28" fill="#1a1a1a"/>
+
+  <!-- Eye white -->
+  <ellipse cx="128" cy="120" rx="26" ry="22" fill="white"/>
+
+  <!-- Iris -->
+  <ellipse cx="128" cy="120" rx="14" ry="14" fill="#FF8C00"/>
+
+  <!-- Pupil -->
+  <ellipse cx="128" cy="120" rx="7" ry="7" fill="#1a1a1a"/>
+
+  <!-- Eye shine -->
+  <circle cx="134" cy="114" r="4" fill="white"/>
+
+  <!-- "2" inside eye — taste v2 -->
+  <text x="128" y="127"
+        font-family="Arial Black, Arial, sans-serif"
+        font-size="18"
+        font-weight="900"
+        text-anchor="middle"
+        fill="#1a1a1a">2</text>
+
+  <!-- Eyebrow — raised/analytical -->
+  <path d="M 100 90 Q 128 82 156 90"
+        stroke="#1a1a1a"
+        stroke-width="5"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Triangle nose — apex pointing DOWN (standard direction) -->
+  <polygon
+    points="128,128 118,148 138,148"
+    fill="#1a1a1a"
+  />
+
+  <!-- Smile -->
+  <path d="M 94 158 Q 128 180 162 158"
+        stroke="#1a1a1a"
+        stroke-width="5"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Tooth gap in smile -->
+  <path d="M 118 164 Q 128 170 138 164"
+        stroke="white"
+        stroke-width="3"
+        fill="none"
+        stroke-linecap="round"/>
+
+  <!-- Gold accent — small star/spark top-center of triangle base -->
+  <polygon
+    points="128,76 131,84 140,84 133,89 136,98 128,93 120,98 123,89 116,84 125,84"
+    fill="#FFD700"
+    stroke="#1a1a1a"
+    stroke-width="1.5"
+  />
+
+  <!-- Subtle grid lines on triangle body — code/design aesthetic -->
+  <line x1="70" y1="115" x2="55" y2="185" stroke="#FFD700" stroke-width="1" opacity="0.2"/>
+  <line x1="186" y1="115" x2="201" y2="185" stroke="#FFD700" stroke-width="1" opacity="0.2"/>
+</svg>
